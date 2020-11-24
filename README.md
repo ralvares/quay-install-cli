@@ -145,10 +145,13 @@ oc get routes
 You should see 2 routes:
 - quayecosystem-quay — is for connecting to the registry
 - quayecosystem-quay-config — is for modifying quay registry configurations.
-connect to the route named **quayecosystem-quay** using your browser.
 
-login using the default master credentials:
-**username:** quay ; **password:** password
+connect to the route named **quayecosystem-quay** using your browser
+and login using the default master credentials:
+
+**username:** quay 
+
+**password:** password
 
 ### Test
 login to Quay
