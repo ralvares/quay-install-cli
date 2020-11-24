@@ -82,7 +82,7 @@ oc apply -f quay-sub.yaml
 ```
 create a pull secret in your project (get your evaluation sub here https://access.redhat.com/products/red-hat-quay/evaluation)
 
-[secret.yaml](secret.yaml)
+[quay-secret.yaml](quay-secret.yaml)
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -94,7 +94,7 @@ data:
 type: kubernetes.io/dockerconfigjson
 ```
 ```shell script
-oc apply -f secret.yaml -n quay
+oc apply -f quay-secret.yaml -n quay
 ```
 
 ### Deploy QuayEcosystem CRD example
