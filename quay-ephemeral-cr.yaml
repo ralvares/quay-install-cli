@@ -1,0 +1,23 @@
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: QuayEcosystem
+metadata:
+  name: quayecosystem
+  namespace: quay
+spec:
+  clair:
+    enabled: true
+    imagePullSecretName: redhat-quay-pull-secret
+  quay:
+    imagePullSecretName: redhat-quay-pull-secret
+    livenessProbe:
+      initialDelaySeconds: 240
+      httpGet:
+        path: /health/instance
+        port: 8443
+        scheme: HTTPS
+      readinessProbe:
+        initialDelaySeconds: 60
+        httpGet:
+          path: /health/instance
+          port: 8443
+          scheme: HTTPS
