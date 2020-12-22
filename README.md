@@ -28,7 +28,7 @@ oc describe packagemanifests/quay-operator -n openshift-marketplace | grep -A36 
 To install an operator in a specific project (in case of cluster-wide false), you need to create first an OperatorGroup in the target namespace. An OperatorGroup is an OLM resource that selects target namespaces in which to generate required RBAC access for all Operators in the same namespace as the OperatorGroup.
 
 ### Create a Project
-[namespace.yaml](namespace.yaml)
+[quay-namespace.yaml](quay-namespace.yaml)
 ```yaml
 apiVersion: v1
 kind: Namespace
@@ -39,7 +39,7 @@ metadata:
   name: quay
 ```
 ```shell script
-oc apply -f namespace.yaml
+oc apply -f quay-namespace.yaml
 ```
 or
 ```shell script
@@ -177,3 +177,23 @@ push minecraft-server to quay/myrepo
 podman push docker.io/itzg/minecraft-server quayecosystem-quay-quay.<YOUR-DOMAIN>/quay/myrepo:minecraft --tls-verify=false
 ```
 verify in quay that image is received and Clair has found vulnerabilities
+
+
+## Install Quay Security Operator
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: container-security-operator
+  namespace: openshift-operators
+spec:
+  channel: quay-v3.3
+  installPlanApproval: Automatic
+  name: container-security-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+```
+```shell script
+oc apply -f quay-security.yaml
+```
