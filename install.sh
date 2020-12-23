@@ -16,6 +16,7 @@ echo "Quay secret created!"
 echo " "
 echo "Creating Quay Subscription"
 oc apply -f quay-sub.yaml
+sleep 30
 QUAY="$(oc get pods -o name -n quay | grep quay-operator-)"
 oc -n quay wait --for=condition=Ready ${QUAY}
 echo "Quay Subscription created!"
