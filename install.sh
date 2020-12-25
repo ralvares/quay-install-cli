@@ -17,7 +17,7 @@ echo " "
 echo "Creating Quay Subscription"
 oc apply -f quay-sub.yaml
 sleep 30
-QUAY="$(oc get pods -o name -n quay | grep quay-operator)"
+QUAY="$(oc get subs -o name -n quay | grep quay-operator)"
 oc -n quay wait --timeout=120s --for=condition=CatalogSourcesUnhealthy=False ${QUAY}
 echo "Quay Subscription created!"
 echo " "
