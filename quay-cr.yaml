@@ -1,41 +1,5 @@
-apiVersion: redhatcop.redhat.io/v1alpha1
-kind: QuayEcosystem
+apiVersion: quay.redhat.com/v1
+kind: QuayRegistry
 metadata:
+  name: container-registry
   namespace: quay
-  name: quayecosystem
-spec:
-  clair:
-    enabled: true
-    updateInterval: 60m
-#    database:
-#      volumeSize: 10Gi
-    imagePullSecretName: redhat-quay-pull-secret
-  quay:
-    keepConfigDeployment: true
-    externalAccess:
-      configHostname: quay-config.apps.cluster-cd57.cd57.example.opentlc.com
-      hostname: quay.apps.cluster-cd57.cd57.example.opentlc.com
-      tls:
-        termination: edge
-      type: Route
-    deploymentStrategy: Recreate
-#    database:
-#      volumeSize: 10Gi
-    imagePullSecretName: redhat-quay-pull-secret
-    skipSetup: false
-#    registryStorage:
-#      persistentVolumeAccessModes:
-#        - ReadWriteOnce
-#      persistentVolumeSize: 10Gi
-    livenessProbe:
-      initialDelaySeconds: 240
-      httpGet:
-        path: /health/instance
-        port: 8443
-        scheme: HTTPS
-      readinessProbe:
-        initialDelaySeconds: 80
-        httpGet:
-          path: /health/instance
-          port: 8443
-          scheme: HTTPS

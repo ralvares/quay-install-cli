@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    openshift.io/description: "Red Hat OpenShift Container Storage"
+    openshift.io/display-name: "RHOCS"
+  name: openshift-storage

@@ -1,7 +1,110 @@
 # quay-install-cli
 Deploy Red Hat Quay v3.4 container registry on OpenShift 4.6 using the Quay Operator.
 
-## Setup Procedure
+This repo is based on official Quay documentation [DEPLOY RED HAT QUAY ON OPENSHIFT WITH THE QUAY OPERATOR](https://access.redhat.com/documentation/en-us/red_hat_quay/3.4/html/deploy_red_hat_quay_on_openshift_with_the_quay_operator/index)
+
+## Object Storage setup ([PREREQUISITE](https://access.redhat.com/documentation/en-us/red_hat_quay/3.4/html/deploy_red_hat_quay_on_openshift_with_the_quay_operator/con-quay-openshift-prereq))
+By default, the Red Hat Quay Operator uses the ObjectBucketClaim Kubernetes API to provision object storage. Consuming this API decouples the Operator from any vendor-specific implementation. OpenShift Container Storage provides this API via its NooBaa component, which will be used in this example.
+
+Ensure that the RHOCS operator exists in the channel catalog.
+```shell script
+oc get packagemanifests -n openshift-marketplace | grep ocs
+```
+
+Query the available channels for RHOCS operator
+```shell script
+oc get packagemanifest -o jsonpath='{range .status.channels[*]}{.name}{"\n"}{end}{"\n"}' -n openshift-marketplace ocs-operator
+```
+
+Discover whether the operator can be installed cluster-wide or in a single namespace
+```shell script
+oc get packagemanifest -o jsonpath='{range .status.channels[*]}{.name}{" => cluster-wide: "}{.currentCSVDesc.installModes[?(@.type=="AllNamespaces")].supported}{"\n"}{end}{"\n"}' -n openshift-marketplace ocs-operator
+```
+To install an operator in a specific project (in case of cluster-wide false), you need to create first an OperatorGroup in the target namespace. An OperatorGroup is an OLM resource that selects target namespaces in which to generate required RBAC access for all Operators in the same namespace as the OperatorGroup.
+
+Check the CSV information for additional details
+```shell script
+oc describe packagemanifests/quay-operator -n openshift-marketplace | grep -A36 Channels
+```
+
+### Create a Project for RHOCS
+[ocs-namespace.yaml](ocs-namespace.yaml)
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    openshift.io/description: "Red Hat OpenShift Container Storage"
+    openshift.io/display-name: "RHOCS"
+  name: openshift-storage
+```
+```shell script
+oc apply -f ocs-namespace.yaml
+```
+or
+```shell script
+oc new-project openshift-storage
+```
+
+### Create an OperatorGroup
+[ocs-og.yaml](ocs-og.yaml)
+```yaml
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: ocs-og
+  generateName: ocs-
+  namespace: openshift-storage
+spec:
+  targetNamespaces:
+    - openshift-storage
+```
+```shell script
+oc apply -f ocs-og.yaml
+```
+
+### Create an OCS Subscription
+[ocs-sub.yaml](ocs-sub.yaml)
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: ocs-operator
+  namespace: openshift-storage
+spec:
+  channel: stable-4.6
+  installPlanApproval: Automatic
+  name: ocs-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+```
+```shell script
+oc apply -f ocs-sub.yaml
+```
+
+### Create NooBaa object storage
+[ocs-noobaa-cr.yaml](ocs-noobaa-cr.yaml)
+```yaml
+apiVersion: noobaa.io/v1alpha1
+kind: NooBaa
+metadata:
+  name: noobaa
+  namespace: openshift-storage
+spec:
+  dbResources:
+    requests:
+      cpu: '0.1'
+      memory: 1Gi
+  coreResources:
+    requests:
+      cpu: '0.1'
+      memory: 1Gi
+```
+```shell script
+oc apply -f ocs-noobaa-cr.yaml
+```
+
+## Quay Setup Procedure
 
 Ensure that the Quay operator exists in the channel catalog.
 ```shell script
@@ -23,11 +126,7 @@ Check the CSV information for additional details
 oc describe packagemanifests/quay-operator -n openshift-marketplace | grep -A36 Channels
 ```
 
-## Install an operator in a namespace using the CLI
-
-To install an operator in a specific project (in case of cluster-wide false), you need to create first an OperatorGroup in the target namespace. An OperatorGroup is an OLM resource that selects target namespaces in which to generate required RBAC access for all Operators in the same namespace as the OperatorGroup.
-
-### Create a Project
+### Create a Project for Quay
 [quay-namespace.yaml](quay-namespace.yaml)
 ```yaml
 apiVersion: v1
@@ -46,32 +145,16 @@ or
 oc new-project quay
 ```
 
-### Create an OperatorGroup
-[quay-og.yaml](quay-og.yaml)
-```yaml
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: quay-og #name of your OperatorGroup. free choice
-  namespace: quay #the namespace in which you want to deploy your operator
-spec:
-  targetNamespaces:
-  - quay #the namespace in which you want to deploy your operator (again)
-```
-```shell script
-oc apply -f quay-og.yaml
-```
-
-### Create a Subscription
+### Create a Quay Subscription
 [quay-sub.yaml](quay-sub.yaml)
 ```yaml
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: quay-operator
-  namespace: quay
+  namespace: openshift-operators
 spec:
-  channel: quay-v3.3
+  channel: quay-v3.4
   installPlanApproval: Automatic
   name: quay-operator
   source: redhat-operators
@@ -88,46 +171,25 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: redhat-quay-pull-secret
+  namespace: quay
 data:
   .dockerconfigjson: >-
     <YOUR-PULL-SECRET>
 type: kubernetes.io/dockerconfigjson
 ```
 ```shell script
-oc apply -f quay-secret.yaml -n quay
+oc apply -f quay-secret.yaml
 ```
 
-### Deploy QuayEcosystem CRD example
+### Deploy QuayRegistry CR example
 
-You can get details about the Custom Resource Definitions (CRD) supported by the operator or retrieve some sample CRDs.
-
-Get the CSV name of the installed Quay operator
-```shell script
-oc get csv #get operator name
-CSV=$(oc get csv -o name |grep /red-hat-quay.) #store the CSV data
-```
-Query the ClusterServiceVersion (CSV)
-```shell script
-oc get $CSV -o json |jq -r '.spec.customresourcedefinitions.owned[]|.name' #query the CRDs enabled by the operator
-oc get $CSV -o json |jq -r '.metadata.annotations["alm-examples"]' #retrieve the sample CRDs if you need some help to get started
-```
-Crate a Quay instance using the provided sample CRD
-```shell script
-oc get $CSV -o json |jq -r '.metadata.annotations["alm-examples"]' |jq '.[0]' |oc apply -f -
-```
-or using the example [quay-cr.yaml](quay-cr.yaml)
+[quay-cr.yaml](quay-cr.yaml)
 ```yaml
-apiVersion: redhatcop.redhat.io/v1alpha1
-kind: QuayEcosystem
+apiVersion: quay.redhat.com/v1
+kind: QuayRegistry
 metadata:
-  name: quayecosystem
+  name: container-registry
   namespace: quay
-spec:
-  clair:
-    enabled: true
-    imagePullSecretName: redhat-quay-pull-secret
-  quay:
-    imagePullSecretName: redhat-quay-pull-secret
 ```
 ```shell script
 oc apply -f quay-cr.yaml
@@ -142,16 +204,12 @@ oc get $(oc get $CSV -o json |jq -r '[.spec.customresourcedefinitions.owned[]|.n
 ```shell script
 oc get routes
 ```
-You should see 2 routes:
-- quayecosystem-quay — is for connecting to the registry
-- quayecosystem-quay-config — is for modifying quay registry configurations.
+You should see 3 routes:
+- container-registry-quay — is for connecting to the registry
 
-connect to the route named **quayecosystem-quay** using your browser
-and login using the default master credentials:
+connect to the route named **container-registry-quay** using your browser
 
-**username:** quay 
-
-**password:** password
+you'll need to create an account
 
 ### Test
 login to Quay
@@ -188,7 +246,7 @@ metadata:
   name: container-security-operator
   namespace: openshift-operators
 spec:
-  channel: quay-v3.3
+  channel: quay-v3.4
   installPlanApproval: Automatic
   name: container-security-operator
   source: redhat-operators

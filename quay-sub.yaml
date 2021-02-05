@@ -2,9 +2,9 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: quay-operator
-  namespace: quay
+  namespace: openshift-operators
 spec:
-  channel: quay-v3.3
+  channel: quay-v3.4
   installPlanApproval: Automatic
   name: quay-operator
   source: redhat-operators
