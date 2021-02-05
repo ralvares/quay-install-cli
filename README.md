@@ -1,5 +1,5 @@
 # quay-install-cli
-Deploy Red Hat Quay container registry on OpenShift using the Quay Operator.
+Deploy Red Hat Quay v3.3 container registry on OpenShift 4.5 using the Quay Operator.
 
 ## Setup Procedure
 
