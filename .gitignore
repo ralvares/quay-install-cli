@@ -18,5 +18,5 @@ nb-configuration.xml
 .factorypath
 
 # rendom
-dump.yaml
+private/
 .DS_Store
