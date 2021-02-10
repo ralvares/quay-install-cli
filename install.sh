@@ -8,6 +8,9 @@ echo "***********************************************"
 echo "Creating RHOCS namespace"
 oc apply -f ocs-namespace.yaml
 echo " "
+echo "Annotate RHOCS namespace"
+oc annotate namespace openshift-storage 'scheduler.alpha.kubernetes.io/defaultTolerations'='[{"key":"business_unit","value":"NGVP_Management","operator":"Equal","effect":"NoSchedule"}]'
+echo " "
 echo "Creating RHOCS OperatorGroup"
 oc apply -f ocs-og.yaml
 echo " "
@@ -30,8 +33,11 @@ echo "***********************************************"
 echo "Creating Quay namespace"
 oc apply -f quay-namespace.yaml
 echo " "
-echo "Creating Quay pull secret"
-oc apply -f quay-secret.yaml
+echo "Annotate Quay namespace"
+oc annotate namespace quay 'scheduler.alpha.kubernetes.io/defaultTolerations'='[{"key":"business_unit","value":"NGVP_Management","operator":"Equal","effect":"NoSchedule"}]'
+echo " "
+echo "Annotate Openshift Operators namespace"
+oc annotate namespace openshift-operators 'scheduler.alpha.kubernetes.io/defaultTolerations'='[{"key":"business_unit","value":"NGVP_Management","operator":"Equal","effect":"NoSchedule"}]'
 echo " "
 echo "Creating Quay Subscription"
 oc apply -f quay-sub.yaml
