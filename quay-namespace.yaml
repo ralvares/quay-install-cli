@@ -3,5 +3,5 @@ kind: Namespace
 metadata:
   annotations:
     openshift.io/description: "Red Hat Quay Enterprise Container Image Repository"
-    openshift.io/display-name: "Quay"
+    openshift.io/display-name: "Quay Repository"
   name: quay
