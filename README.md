@@ -1,4 +1,4 @@
-# quay-install-cli
+# Install Quay 3.4 on CRC - Red Hat CodeReady Containers
 Deploy Red Hat Quay v3.4 container registry on OpenShift 4.6 using the Quay Operator.
 
 This repo is based on official Quay documentation [DEPLOY RED HAT QUAY ON OPENSHIFT WITH THE QUAY OPERATOR](https://access.redhat.com/documentation/en-us/red_hat_quay/3.4/html/deploy_red_hat_quay_on_openshift_with_the_quay_operator/index)
@@ -226,7 +226,7 @@ connect to the route named **container-registry-quay** using your browser
 ### Test
 login to Quay
 ```shell script
-podman login -u="quay" -p="password" quayecosystem-quay-quay.<YOUR-DOMAIN> --tls-verify=false
+podman login -u="quay" -p="password" container-registry-quay-quay.apps-crc.testing --tls-verify=false
 ```
 pull ubi image from registry.access.redhat.com
 ```shell script
@@ -234,7 +234,7 @@ podman pull registry.access.redhat.com/ubi8/ubi:latest
 ```
 push ubi to quay/myrepo 
 ```shell script
-podman push registry.access.redhat.com/ubi8/ubi quayecosystem-quay-quay.<YOUR-DOMAIN>/quay/myrepo:ubi --tls-verify=false
+podman push registry.access.redhat.com/ubi8/ubi container-registry-quay-quay.apps-crc.testing/quay/myrepo:ubi --tls-verify=false
 ```
 verify in quay that image is received and no vulnerabilities are found
 
