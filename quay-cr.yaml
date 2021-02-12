@@ -3,3 +3,7 @@ kind: QuayRegistry
 metadata:
   name: container-registry
   namespace: quay
+spec:
+  components:
+    - kind: horizontalpodautoscaler
+      managed: false
