@@ -163,18 +163,18 @@ spec:
 ```shell script
 oc apply -f quay-sub.yaml
 ```
-create a pull secret in your project (get your evaluation sub here https://access.redhat.com/products/red-hat-quay/evaluation)
+Create a pull secret in your project.
+
+https://access.redhat.com/solutions/3533201
 
 [quay-secret.yaml](quay-secret.yaml)
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: redhat-quay-pull-secret
-  namespace: quay
+  name: redhat-pull-secret
 data:
-  .dockerconfigjson: >-
-    <YOUR-PULL-SECRET>
+  .dockerconfigjson: ewogICJhdXRocyI6IHsKICAgICJxdWF5LmlvIjogewogICAgICAiYXV0aCI6ICJjbVZrYUdGMEszRjFZWGs2VHpneFYxTklVbE5LVWpFMFZVRmFRa3MxTkVkUlNFcFRNRkF4VmpSRFRGZEJTbFl4V0RKRE5GTkVOMHRQTlRsRFVUbE9NMUpGTVRJMk1USllWVEZJVWc9PSIsCiAgICAgICJlbWFpbCI6ICIiCiAgICB9CiAgfQp9
 type: kubernetes.io/dockerconfigjson
 ```
 ```shell script
@@ -189,7 +189,11 @@ apiVersion: quay.redhat.com/v1
 kind: QuayRegistry
 metadata:
   name: container-registry
-  namespace: quay
+  namespace: quay-enterprise
+spec:
+  components:
+    - kind: horizontalpodautoscaler
+      managed: false
 ```
 ```shell script
 oc apply -f quay-cr.yaml
@@ -204,12 +208,20 @@ oc get $(oc get $CSV -o json |jq -r '[.spec.customresourcedefinitions.owned[]|.n
 ```shell script
 oc get routes
 ```
+```
+oc get routes
+NAME                                    HOST/PORT                                                     PATH   SERVICES                                PORT    TERMINATION            WILDCARD
+container-registry-quay                 container-registry-quay-quay.apps-crc.testing                        container-registry-quay-app             https   passthrough/Redirect   None
+container-registry-quay-builder         container-registry-quay-builder-quay.apps-crc.testing                container-registry-quay-app             grpc    passthrough/Redirect   None
+container-registry-quay-config-editor   container-registry-quay-config-editor-quay.apps-crc.testing          container-registry-quay-config-editor   http    edge/Redirect          None
+```
+
 You should see 3 routes:
 - container-registry-quay — is for connecting to the registry
 
 connect to the route named **container-registry-quay** using your browser
 
-you'll need to create an account
+**you'll need to create an account**
 
 ### Test
 login to Quay
@@ -225,17 +237,6 @@ push ubi to quay/myrepo
 podman push registry.access.redhat.com/ubi8/ubi quayecosystem-quay-quay.<YOUR-DOMAIN>/quay/myrepo:ubi --tls-verify=false
 ```
 verify in quay that image is received and no vulnerabilities are found
-
-pull minecraft-server from docker.io
-```shell script
-podman pull docker.io/itzg/minecraft-server:latest
-```
-push minecraft-server to quay/myrepo
-```shell script
-podman push docker.io/itzg/minecraft-server quayecosystem-quay-quay.<YOUR-DOMAIN>/quay/myrepo:minecraft --tls-verify=false
-```
-verify in quay that image is received and Clair has found vulnerabilities
-
 
 ## Install Quay Security Operator
 
