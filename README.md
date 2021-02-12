@@ -1,31 +1,15 @@
 # Install Quay 3.4 on CRC - Red Hat CodeReady Containers
 Deploy Red Hat Quay v3.4 container registry on OpenShift 4.6 using the Quay Operator.
 
-This repo is based on official Quay documentation [DEPLOY RED HAT QUAY ON OPENSHIFT WITH THE QUAY OPERATOR](https://access.redhat.com/documentation/en-us/red_hat_quay/3.4/html/deploy_red_hat_quay_on_openshift_with_the_quay_operator/index)
+## PREREQUISITES
 
-## Object Storage setup ([PREREQUISITE](https://access.redhat.com/documentation/en-us/red_hat_quay/3.4/html/deploy_red_hat_quay_on_openshift_with_the_quay_operator/con-quay-openshift-prereq))
+### Red Hat CodeReady Containers
+[Red Hat CodeReady Containers](https://developers.redhat.com/products/codeready-containers/overview)
+
+### RHOCS Operator
+[Object Storage setup](https://access.redhat.com/documentation/en-us/red_hat_quay/3.4/html/deploy_red_hat_quay_on_openshift_with_the_quay_operator/con-quay-openshift-prereq)
+
 By default, the Red Hat Quay Operator uses the ObjectBucketClaim Kubernetes API to provision object storage. Consuming this API decouples the Operator from any vendor-specific implementation. OpenShift Container Storage provides this API via its NooBaa component, which will be used in this example.
-
-Ensure that the RHOCS operator exists in the channel catalog.
-```shell script
-oc get packagemanifests -n openshift-marketplace | grep ocs
-```
-
-Query the available channels for RHOCS operator
-```shell script
-oc get packagemanifest -o jsonpath='{range .status.channels[*]}{.name}{"\n"}{end}{"\n"}' -n openshift-marketplace ocs-operator
-```
-
-Discover whether the operator can be installed cluster-wide or in a single namespace
-```shell script
-oc get packagemanifest -o jsonpath='{range .status.channels[*]}{.name}{" => cluster-wide: "}{.currentCSVDesc.installModes[?(@.type=="AllNamespaces")].supported}{"\n"}{end}{"\n"}' -n openshift-marketplace ocs-operator
-```
-To install an operator in a specific project (in case of cluster-wide false), you need to create first an OperatorGroup in the target namespace. An OperatorGroup is an OLM resource that selects target namespaces in which to generate required RBAC access for all Operators in the same namespace as the OperatorGroup.
-
-Check the CSV information for additional details
-```shell script
-oc describe packagemanifests/quay-operator -n openshift-marketplace | grep -A36 Channels
-```
 
 ### Create a Project for RHOCS
 [ocs-namespace.yaml](ocs-namespace.yaml)
@@ -105,26 +89,6 @@ oc apply -f ocs-noobaa-cr.yaml
 ```
 
 ## Quay Setup Procedure
-
-Ensure that the Quay operator exists in the channel catalog.
-```shell script
-oc get packagemanifests -n openshift-marketplace | grep quay
-```
-
-Query the available channels for Quay operator
-```shell script
-oc get packagemanifest -o jsonpath='{range .status.channels[*]}{.name}{"\n"}{end}{"\n"}' -n openshift-marketplace quay-operator
-```
-
-Discover whether the operator can be installed cluster-wide or in a single namespace
-```shell script
-oc get packagemanifest -o jsonpath='{range .status.channels[*]}{.name}{" => cluster-wide: "}{.currentCSVDesc.installModes[?(@.type=="AllNamespaces")].supported}{"\n"}{end}{"\n"}' -n openshift-marketplace quay-operator
-```
-
-Check the CSV information for additional details
-```shell script
-oc describe packagemanifests/quay-operator -n openshift-marketplace | grep -A36 Channels
-```
 
 ### Create a Project for Quay
 [quay-namespace.yaml](quay-namespace.yaml)
