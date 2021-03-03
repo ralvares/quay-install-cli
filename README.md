@@ -154,7 +154,7 @@ apiVersion: quay.redhat.com/v1
 kind: QuayRegistry
 metadata:
   name: container-registry
-  namespace: quay-enterprise
+  namespace: quay
 spec:
   components:
     - kind: horizontalpodautoscaler
